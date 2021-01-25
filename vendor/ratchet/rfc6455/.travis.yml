@@ -1,7 +1,5 @@
 language: php
 
-services: docker
-
 php:
     - 5.6
     - 7.0
@@ -9,18 +7,11 @@ php:
     - 7.2
     - 7.3
     - 7.4
-    - nightly
-
-env:
-    - ABTEST=client
-    - ABTEST=server
-
-matrix:
-    allow_failures:
-        - php: nightly
 
 before_install:
-    - docker pull crossbario/autobahn-testsuite
+    - export PATH=$HOME/.local/bin:$PATH
+    - pip install --user autobahntestsuite
+    - pip list --user autobahntestsuite
 
 before_script:
     - composer install

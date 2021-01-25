@@ -1,15 +1,12 @@
 <?php
-
 namespace Ratchet\RFC6455\Test\Unit\Messaging;
-
 use Ratchet\RFC6455\Messaging\Frame;
 use Ratchet\RFC6455\Messaging\Message;
-use PHPUnit\Framework\TestCase;
 
 /**
  * @covers Ratchet\RFC6455\Messaging\Message
  */
-class MessageTest extends TestCase {
+class MessageTest extends \PHPUnit_Framework_TestCase {
     /** @var Message */
     protected $message;
 

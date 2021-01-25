@@ -7,9 +7,8 @@ use Ratchet\RFC6455\Messaging\Frame;
 use Ratchet\RFC6455\Messaging\Message;
 use Ratchet\RFC6455\Messaging\MessageBuffer;
 use React\EventLoop\Factory;
-use PHPUnit\Framework\TestCase;
 
-class MessageBufferTest extends TestCase
+class MessageBufferTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * This is to test that MessageBuffer can handle a large receive

@@ -1,9 +1,7 @@
 <?php
-
 namespace Ratchet\RFC6455\Test;
-use PHPUnit\Framework\TestCase;
 
-class AbResultsTest extends TestCase {
+class AbResultsTest extends \PHPUnit_Framework_TestCase {
     private function verifyAutobahnResults($fileName) {
         if (!file_exists($fileName)) {
             return $this->markTestSkipped('Autobahn TestSuite results not found');
