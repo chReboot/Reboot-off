@@ -17,10 +17,11 @@ foreach($ticker as $symbol=>$value)
 {
     if(
         (substr($symbol, -3) == "BTC")
-        && $count<5
+        && $count<15
     )
     {
         $btcSymbols[$symbol]["name"] = $symbol;
+        $btcSymbols[$symbol]["kurs"] = $value;
         $count++;
     }
 }
@@ -43,19 +44,23 @@ foreach($btcSymbols as $value)
 
     // 1m 3m 5m 15m 30m 1h 2h 4h 6h 8h 12h 1d 3d 1w 1M
     // customTime
-    $ticks = $api->candlesticks($btcSymbol, "1h", 4);
-    print_r(($ticks));    
+    $dauer = "4h";
+    $anzahl = 1;
 
+    $ticks = $api->candlesticks($btcSymbol, $dauer, $anzahl);
+    #print_r(($ticks));    
+
+    
     // Anfangswert = openPrice
     // Endwert = lastPrice
     // Change = Endwert - Anfangswert / Anfangswert * 100
 
-    $change = (current($ticks)["close"] - current($ticks)["open"]) / current($ticks)["open"] * 100;
-    echo $btcSymbol." price change since 1h: ".$change."%".PHP_EOL;
+    $change = ($btcSymbols[$btcSymbol]["kurs"] - current($ticks)["open"]) / current($ticks)["open"] * 100;
+    echo $btcSymbol." price change since ".$dauer.": ".$change."%".PHP_EOL;
 
-    $btcSymbols[$btcSymbol]["1hChange"] = $change;
+    $btcSymbols[$btcSymbol][$dauer."Change"] = $change;
     
-
+    
 }
 
 
@@ -67,7 +72,7 @@ foreach($btcSymbols as $value)
  
 #print_r($btcSymbols);
 
-#array_multisort(array_column($btcSymbols, '24hChange'), SORT_DESC, $btcSymbols);
+array_multisort(array_column($btcSymbols, '24hChange'), SORT_DESC, $btcSymbols);
 //array_multisort(array_column($btcSymbols, '24hChange'), SORT_DESC, array_column($btcSymbols, '1hChange'), SORT_DESC, $btcSymbols);
 
 
