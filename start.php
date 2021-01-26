@@ -67,7 +67,6 @@ foreach($btcSymbols as $value)
  
 #print_r($btcSymbols);
 
-
 #array_multisort(array_column($btcSymbols, '24hChange'), SORT_DESC, $btcSymbols);
 //array_multisort(array_column($btcSymbols, '24hChange'), SORT_DESC, array_column($btcSymbols, '1hChange'), SORT_DESC, $btcSymbols);
 
