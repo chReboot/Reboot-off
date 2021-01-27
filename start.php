@@ -91,6 +91,22 @@ array_multisort(array_column($btcSymbols, '3dChange'), SORT_DESC, $btcSymbols);
 
 //array_multisort(array_column($btcSymbols, '24hChange'), SORT_DESC, array_column($btcSymbols, '1hChange'), SORT_DESC, $btcSymbols);
 
+/*****************************************
+ * Datenbank
+ *****************************************/
+require "config.php";
+
+try {
+    $connection = new PDO("mysql:host=$host", $username, $password, $options);
+    $sql = "SELECT * FROM chreboot WHERE buy != '' AND sell =''";
+    $erg = $connection->prepare($sql);
+
+    echo $erg->rowCount();
+        
+} catch(PDOException $error) {
+    echo $sql . "<br>" . $error->getMessage();
+}
+
 
 print_r($btcSymbols);
 echo "</pre>";
