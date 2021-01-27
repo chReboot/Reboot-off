@@ -9,8 +9,10 @@ class Logik {
     private $api;
     private $selectedSymbol;
     private $selectedId;
+    private $selectedKurs;
 
     private $anzahlSymbols = 9;
+    private $changeTarget = 2;
 
     public function __construct()
     {
@@ -33,6 +35,8 @@ class Logik {
 
             $result = $handle->fetch(PDO::FETCH_ASSOC);
             $this->selectedId = $result["id"];
+            $this->selectedSymbol = $result["symbol"];
+            $this->selectedKurs = $result["buy"];
         } catch(PDOException $error) 
         {
             echo $sql . "<br>" . $error->getMessage(); 
@@ -150,13 +154,15 @@ class Logik {
 
 
         // DB Log
+        echo "DBid:".$this->selectedId.PHP_EOL;
         try {
-            $sql = "UPDATE INTO orders (symbol, buy, buydate) VALUES (?,?,?)";
+            $sql = "UPDATE orders SET (symbol, sell, selldate) VALUES (?,?,?) WHERE id LIKE ?";
             $stmt = $this->dbcon->prepare($sql);
             $stmt->execute( [
                             $this->btcSymbols[$this->selectedSymbol]["name"], 
                             $this->btcSymbols[$this->selectedSymbol]["kurs"], 
-                            date('Y-m-d H:i:s')
+                            date('Y-m-d H:i:s'),
+                            $this->selectedId
                             ]);
         } catch(PDOException $error) 
         {
@@ -168,7 +174,19 @@ class Logik {
 
     function sellCheck()
     {
-        echo "sellCheck".PHP_EOL;
+        echo "sellCheck".PHP_EOL;        
+        $price = $this->api->price($this->selectedSymbol);        
+
+        // Anfangswert = openPrice
+        // Endwert = lastPrice
+        // Change = Endwert - Anfangswert / Anfangswert * 100
+        echo $change = ($price - $this->selectedKurs) / $this->selectedKurs * 100;
+        echo PHP_EOL;
+
+        if ($change > $this->changeTarget)
+        {
+            return true;
+        }
         return false;
     }
 }
