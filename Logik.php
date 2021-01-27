@@ -10,8 +10,10 @@ class Logik {
     private $selectedSymbol;
     private $selectedId;
     private $selectedKurs;
+    private $selectedChange;
+    private $sellKurs;
 
-    private $anzahlSymbols = 9;
+    private $anzahlSymbols = 5;
     private $changeTarget = 2;
 
     public function __construct()
@@ -22,6 +24,7 @@ class Logik {
 
         // API
         $this->api = new Binance\API( "binance.json" );
+        $this->api = new Binance\RateLimiter($this->api);
     }
 
     public function getOrderDB ()
@@ -45,7 +48,7 @@ class Logik {
         return $orderstatus = $handle->rowCount();        
     }
 
-    function getBTCSymbols()
+    public function getBTCSymbols()
     {
         echo "getBTCSymbols".PHP_EOL;
         $ticker = $this->api->prices();
@@ -65,7 +68,7 @@ class Logik {
         return true;
     }
 
-    function berechneChange()
+    public function berechneChange()
     {
         echo "berechneChange".PHP_EOL;
         foreach($this->btcSymbols as $value)
@@ -103,7 +106,7 @@ class Logik {
         return true;
     }
 
-    function selectSymbol()
+    public function selectSymbol()
     {
         echo "selectSymbol".PHP_EOL;
         array_multisort(array_column($this->btcSymbols, '3dChange'), SORT_DESC, $this->btcSymbols);
@@ -114,7 +117,7 @@ class Logik {
                 && ($values["4hChange"] > 0)
                 && ($values["24hChange"] > 0)
             ) {
-                echo "Beste: ".$symbol; 
+                echo "Beste: ".$symbol.PHP_EOL; 
                 $this->selectedSymbol = $symbol;
                 return true;                
             }            
@@ -122,7 +125,7 @@ class Logik {
         return false;
     }
 
-    function buySymbol() 
+    public function buySymbol() 
     {
         echo "buySymbol".PHP_EOL;
 
@@ -146,7 +149,7 @@ class Logik {
         return true;
     }
 
-    function sellSymbol() 
+    public function sellSymbol() 
     {
         echo "sellSymbol".PHP_EOL;
 
@@ -156,12 +159,12 @@ class Logik {
         // DB Log
         echo "DBid:".$this->selectedId.PHP_EOL;
         try {
-            $sql = "UPDATE orders SET (symbol, sell, selldate) VALUES (?,?,?) WHERE id LIKE ?";
+            $sql = "UPDATE orders SET sell=?, selldate=?, prozent=? WHERE id LIKE ?";
             $stmt = $this->dbcon->prepare($sql);
-            $stmt->execute( [
-                            $this->btcSymbols[$this->selectedSymbol]["name"], 
-                            $this->btcSymbols[$this->selectedSymbol]["kurs"], 
+            $stmt->execute( [                            
+                            $this->sellKurs, 
                             date('Y-m-d H:i:s'),
+                            $this->selectedChange,
                             $this->selectedId
                             ]);
         } catch(PDOException $error) 
@@ -172,7 +175,7 @@ class Logik {
         return true;
     }
 
-    function sellCheck()
+    public function sellCheck()
     {
         echo "sellCheck".PHP_EOL;        
         $price = $this->api->price($this->selectedSymbol);        
@@ -180,11 +183,14 @@ class Logik {
         // Anfangswert = openPrice
         // Endwert = lastPrice
         // Change = Endwert - Anfangswert / Anfangswert * 100
-        echo $change = ($price - $this->selectedKurs) / $this->selectedKurs * 100;
+        echo "Anfang:".$this->selectedChange = $this->selectedKurs . PHP_EOL;
+        echo "Ende:".$this->selectedChange = $price . PHP_EOL;
+        echo "Change:".$this->selectedChange = ($price - $this->selectedKurs) / $this->selectedKurs * 100;
         echo PHP_EOL;
 
-        if ($change > $this->changeTarget)
+        if ($this->selectedChange > $this->changeTarget)
         {
+            $this->sellKurs = $price;
             return true;
         }
         return false;
