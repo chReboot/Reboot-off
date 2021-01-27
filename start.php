@@ -1,12 +1,33 @@
 <?php
 
 require 'vendor/autoload.php';
-
-$api = new Binance\API( "binance.json" );
+require 'Logik.php';
 
 echo "<pre>";
 
-$btcSymbols = array();
+$logik = new Logik();
+
+if ($logik->getOrderDB() == 0)
+{ 
+    $logik->getBTCSymbols();
+    $logik->berechneChange();
+    if ($logik->selectSymbol() == true)    
+    {
+        $logik->buySymbol();
+    }   
+
+} else 
+{
+    if ($logik->sellCheck() == true)
+    {
+        $logik->sellSymbol();
+    }        
+}
+
+echo "Ende".PHP_EOL;
+
+die;
+
 
 /*****************************************
  * Hole BTC-Währungen
@@ -17,7 +38,7 @@ foreach($ticker as $symbol=>$value)
 {
     if(
         (substr($symbol, -3) == "BTC")
-        && $count<10
+        && $count<2
     )
     {
         $btcSymbols[$symbol]["name"] = $symbol;
@@ -72,7 +93,7 @@ foreach($btcSymbols as $value)
  * Wähle BTC-Währung
  *****************************************/
 array_multisort(array_column($btcSymbols, '3dChange'), SORT_DESC, $btcSymbols);
- foreach($btcSymbols as $symbol=>$values)
+foreach($btcSymbols as $symbol=>$values)
 {
     if(
         ($values["3dChange"] > 0)
@@ -81,9 +102,12 @@ array_multisort(array_column($btcSymbols, '3dChange'), SORT_DESC, $btcSymbols);
     ) {
         echo "Beste: ".$symbol; print_r($values);
         $buy = $symbol;
-        exit;
+        break;
     }
 }
+
+
+
 
  
 #print_r($btcSymbols);
@@ -91,22 +115,37 @@ array_multisort(array_column($btcSymbols, '3dChange'), SORT_DESC, $btcSymbols);
 
 //array_multisort(array_column($btcSymbols, '24hChange'), SORT_DESC, array_column($btcSymbols, '1hChange'), SORT_DESC, $btcSymbols);
 
+
 /*****************************************
  * Datenbank
  *****************************************/
 require "config.php";
 
 try {
-    $connection = new PDO("mysql:host=$host", $username, $password, $options);
-    $sql = "SELECT * FROM chreboot WHERE buy != '' AND sell =''";
+    
+    $connection = new PDO("mysql:host=$host;dbname=$dbname", $username, $password, $options);
+    $sql = "SELECT * FROM orders WHERE buy IS NOT NULL AND sell IS NULL";
     $erg = $connection->prepare($sql);
+    $erg->execute();
 
-    echo $erg->rowCount();
+    echo "DB:".$erg->rowCount();
+    $orderstatus = $erg->rowCount();
+
+    if($orderstatus = 0)
+    {
+        $sql = "INSERT INTO orders (symbol, buy, buydate) VALUES (?,?,?)";
+        $stmt = $connection->prepare($sql);
+        $stmt->execute( [$btcSymbols[$symbol]["name"], $btcSymbols[$symbol]["kurs"], date('Y-m-d H:i:s')]); 
+    } else 
+    {
+        echo "DB drin!";
+    }
+
         
 } catch(PDOException $error) {
     echo $sql . "<br>" . $error->getMessage();
+    echo "Fehler";
 }
-
 
 print_r($btcSymbols);
 echo "</pre>";
