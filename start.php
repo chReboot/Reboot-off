@@ -79,7 +79,9 @@ array_multisort(array_column($btcSymbols, '3dChange'), SORT_DESC, $btcSymbols);
         && ($values["4hChange"] > 0)
         && ($values["24hChange"] > 0)
     ) {
-        echo "Beste: ".$btcSymbol; print_r($values);
+        echo "Beste: ".$symbol; print_r($values);
+        $buy = $symbol;
+        exit;
     }
 }
 
