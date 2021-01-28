@@ -1,5 +1,5 @@
 <?php
-
+ini_set('max_execution_time', '300');
 require 'vendor/autoload.php';
 require 'Logik.php';
 

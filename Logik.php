@@ -13,7 +13,7 @@ class Logik {
     private $selectedChange;
     private $sellKurs;
 
-    private $anzahlSymbols = 5;
+    private $anzahlSymbols = 100;
     private $changeTarget = 2;
 
     public function __construct()
@@ -74,6 +74,7 @@ class Logik {
         foreach($this->btcSymbols as $value)
         {
             $btcSymbol = $value["name"];
+            echo $btcSymbol.PHP_EOL;
 
             // 24h
             $prevDay = $this->api->prevDay($btcSymbol);
@@ -108,10 +109,10 @@ class Logik {
 
     public function selectSymbol()
     {
-        echo "selectSymbol".PHP_EOL;
-        array_multisort(array_column($this->btcSymbols, '3dChange'), SORT_DESC, $this->btcSymbols);
+        echo "selectSymbol".PHP_EOL;        
+        array_multisort(array_column($this->btcSymbols, '3dChange'), SORT_DESC, $this->btcSymbols);        
         foreach($this->btcSymbols as $symbol=>$values)
-        {print_r($values);
+        {
             if(
                 ($values["3dChange"] > 0)
                 && ($values["4hChange"] > 0)
@@ -194,6 +195,14 @@ class Logik {
             return true;
         }
         return false;
+    }
+
+    public function mticker()
+    {
+        $api = $this->api;
+        $api->miniTicker(function($api, $ticker) {
+            print_r($ticker);
+        });
     }
 }
 
