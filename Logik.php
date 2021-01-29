@@ -13,8 +13,9 @@ class Logik {
     private $selectedChange;
     private $sellKurs;
 
-    private $anzahlSymbols = 100;
-    private $changeTarget = 2;
+    private $anzahlSymbols = 300;
+    private $changeTarget = 3;
+    private $changeDanger = -2;
 
     public function __construct()
     {
@@ -155,7 +156,7 @@ class Logik {
         echo "sellSymbol".PHP_EOL;
 
         // SELL
-
+        
 
         // DB Log
         echo "DBid:".$this->selectedId.PHP_EOL;
@@ -179,17 +180,31 @@ class Logik {
     public function sellCheck()
     {
         echo "sellCheck".PHP_EOL;        
-        $price = $this->api->price($this->selectedSymbol);        
-
+        $price = $this->api->price($this->selectedSymbol);    
+        
+        // Letzte Zeit prüfen
+        // 1m 3m 5m 15m 30m 1h 2h 4h 6h 8h 12h 1d 3d 1w 1M
+        $ticks = $this->api->candlesticks($this->selectedSymbol, "5m", 1);
+                
         // Anfangswert = openPrice
         // Endwert = lastPrice
         // Change = Endwert - Anfangswert / Anfangswert * 100
-        echo "Anfang:".$this->selectedChange = $this->selectedKurs . PHP_EOL;
-        echo "Ende:".$this->selectedChange = $price . PHP_EOL;
+        $aktChange = (current($ticks)["close"] - current($ticks)["open"]) / current($ticks)["open"] * 100;
+        
+        // Anfangswert = openPrice
+        // Endwert = lastPrice
+        // Change = Endwert - Anfangswert / Anfangswert * 100
+        echo "Anfang:".$this->selectedKurs . PHP_EOL;
+        echo "Ende:". $price . PHP_EOL;
         echo "Change:".$this->selectedChange = ($price - $this->selectedKurs) / $this->selectedKurs * 100;
         echo PHP_EOL;
 
-        if ($this->selectedChange > $this->changeTarget)
+        // Verkaufe, wenn letzte 5 Minuten negativ UND Target drüber oder unter Danger
+        if ( 
+            ( ($aktChange < 0) && ($this->selectedChange > $this->changeTarget) )
+             || 
+            ( ($aktChange < 0) && ($this->selectedChange < $this->changeDanger) )
+           )
         {
             $this->sellKurs = $price;
             return true;
