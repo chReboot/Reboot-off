@@ -11,14 +11,20 @@ class Logik {
     private $selectedId;
     private $selectedKurs;
     private $selectedChange;
-    private $sellKurs;
+    private $sellKurs;    
 
-    private $anzahlSymbols = 300;
-    private $changeTarget = 3;
-    private $changeDanger = -2;
+    private $anzahlSymbols;
+    private $changeTarget;
+    private $changeDanger;
 
     public function __construct()
     {
+        // Config
+        require "ranges.php";
+        $this->anzahlSymbols = $anzahlSymbols;
+        $this->changeTarget = $changeTarget;
+        $this->changeDanger = $changeDanger;
+
         // DB Verbindung
         require "config.php";
         $this->dbcon = new PDO("mysql:host=$host;dbname=$dbname", $username, $password, $options);
@@ -123,7 +129,7 @@ class Logik {
                 $this->selectedSymbol = $symbol;
                 return true;                
             }            
-        }
+        }        
         return false;
     }
 
@@ -131,8 +137,17 @@ class Logik {
     {
         echo "buySymbol".PHP_EOL;
 
+        // Wie viel habe ich?
+        $ticker = $this->api->prices();
+        $balances = $this->api->balances($ticker);
+        print_r($balances);
+        echo "BTC owned: ".$balances['BTC']['available'].PHP_EOL;
+        echo "ETH owned: ".$balances['ETH']['available'].PHP_EOL;
+        echo "Estimated Value: ".$this->api->btc_value." BTC".PHP_EOL;
+        
         // BUY
-
+        $quantity = $balances['BTC']['available'];
+        $order = $this->api->marketBuy($this->selectedSymbol, $quantity);
 
         // DB Log
         try {
@@ -154,9 +169,18 @@ class Logik {
     public function sellSymbol() 
     {
         echo "sellSymbol".PHP_EOL;
+        
+        // Wie viel habe ich?
+        $ticker = $this->api->prices();
+        $balances = $this->api->balances($ticker);
+        print_r($balances);
+        echo "BTC owned: ".$balances['BTC']['available'].PHP_EOL;
+        echo "ETH owned: ".$balances['ETH']['available'].PHP_EOL;
+        echo "Estimated Value: ".$this->api->btc_value." BTC".PHP_EOL;
 
         // SELL
-        
+        $quantity = $balances[$this->selectedSymbol]['available'];
+        $order = $this->api->marketSell($this->selectedSymbol, $quantity);
 
         // DB Log
         echo "DBid:".$this->selectedId.PHP_EOL;
@@ -194,11 +218,15 @@ class Logik {
         // Anfangswert = openPrice
         // Endwert = lastPrice
         // Change = Endwert - Anfangswert / Anfangswert * 100
+        $this->selectedChange = ($price - $this->selectedKurs) / $this->selectedKurs * 100;
+        
         echo "Anfang:".$this->selectedKurs . PHP_EOL;
         echo "Ende:". $price . PHP_EOL;
-        echo "Change:".$this->selectedChange = ($price - $this->selectedKurs) / $this->selectedKurs * 100;
-        echo PHP_EOL;
-
+        echo "aktChange:".$aktChange . PHP_EOL;
+        echo "selectChange".$this->selectedChange . PHP_EOL;
+        echo "changeDanger".$this->changeDanger . PHP_EOL;
+        echo "changeTarget".$this->changeTarget . PHP_EOL;
+        
         // Verkaufe, wenn letzte 5 Minuten negativ UND Target drüber oder unter Danger
         if ( 
             ( ($aktChange < 0) && ($this->selectedChange > $this->changeTarget) )
@@ -206,9 +234,11 @@ class Logik {
             ( ($aktChange < 0) && ($this->selectedChange < $this->changeDanger) )
            )
         {
+            echo "SELL!" . PHP_EOL;
             $this->sellKurs = $price;
             return true;
         }
+        echo "no sell" . PHP_EOL;
         return false;
     }
 
