@@ -81,7 +81,7 @@ class Logik {
         foreach($this->btcSymbols as $value)
         {
             $btcSymbol = $value["name"];
-            echo $btcSymbol.PHP_EOL;
+            #echo $btcSymbol.PHP_EOL;
 
             // 24h
             $prevDay = $this->api->prevDay($btcSymbol);
@@ -145,11 +145,14 @@ class Logik {
         echo "Estimated Value: ".$this->api->btc_value." BTC".PHP_EOL;
         
         // BUY
-        $quantity = $balances['BTC']['available'];
-        $quantity = 0.0005;
+        $einsatz = 0.3 * $balances['BTC']['available'];
+        $quantity = $einsatz / $ticker['$this->selectedSymbol'];
+
+        print_r("Menge". $quantity);
 
         $order = $this->api->marketBuy($this->selectedSymbol, $quantity);
-
+        print_r($order);
+        
         // DB Log
         try {
             $sql = "INSERT INTO orders (symbol, buy, buydate) VALUES (?,?,?)";
@@ -174,17 +177,12 @@ class Logik {
         // Wie viel habe ich?
         $ticker = $this->api->prices();
         $balances = $this->api->balances($ticker);
-        print_r($balances);
-        echo "BTC owned: ".$balances['BTC']['available'].PHP_EOL;
-        echo "ETH owned: ".$balances['ETH']['available'].PHP_EOL;
-        echo "Estimated Value: ".$this->api->btc_value." BTC".PHP_EOL;
-
+        
         // SELL
         $quantity = $balances[$this->selectedSymbol]['available'];
         $order = $this->api->marketSell($this->selectedSymbol, $quantity);
 
-        // DB Log
-        echo "DBid:".$this->selectedId.PHP_EOL;
+        // DB Log        
         try {
             $sql = "UPDATE orders SET sell=?, selldate=?, prozent=? WHERE id LIKE ?";
             $stmt = $this->dbcon->prepare($sql);
