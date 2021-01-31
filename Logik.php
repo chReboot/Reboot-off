@@ -141,12 +141,13 @@ class Logik {
         $ticker = $this->api->prices();
         $balances = $this->api->balances($ticker);
         print_r($balances);
-        echo "BTC owned: ".$balances['BTC']['available'].PHP_EOL;
-        echo "ETH owned: ".$balances['ETH']['available'].PHP_EOL;
+        echo "BTC owned: ".$balances['BTC']['available'].PHP_EOL;        
         echo "Estimated Value: ".$this->api->btc_value." BTC".PHP_EOL;
         
         // BUY
         $quantity = $balances['BTC']['available'];
+        $quantity = 0.0005;
+
         $order = $this->api->marketBuy($this->selectedSymbol, $quantity);
 
         // DB Log
