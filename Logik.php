@@ -146,7 +146,7 @@ class Logik {
         
         // BUY
         $einsatz = 0.3 * $balances['BTC']['available'];
-        $quantity = $einsatz / $ticker['$this->selectedSymbol'];
+        $quantity = $einsatz / $ticker[$this->selectedSymbol];
 
         print_r("Menge". $quantity);
 
