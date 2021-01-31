@@ -140,10 +140,7 @@ class Logik {
         // Wie viel habe ich?
         $ticker = $this->api->prices();
         $balances = $this->api->balances($ticker);
-        print_r($balances);
-        echo "BTC owned: ".$balances['BTC']['available'].PHP_EOL;        
-        echo "Estimated Value: ".$this->api->btc_value." BTC".PHP_EOL;
-        
+                
         // BUY
         $einsatz = 0.3 * $balances['BTC']['available'];
         $quantity = $einsatz / $ticker[$this->selectedSymbol];
