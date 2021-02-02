@@ -147,7 +147,7 @@ class Logik {
                     
             // BUY
             $einsatz = 0.3 * $balances['BTC']['available'];
-            $quantity = $einsatz / $ticker[$this->selectedSymbol];
+            $quantity = round($einsatz / $ticker[$this->selectedSymbol]);
 
             print_r("Menge". $quantity);
 
@@ -184,7 +184,9 @@ class Logik {
             $balances = $this->api->balances($ticker);
             
             // SELL
-            $quantity = $balances[$this->selectedSymbol]['available'];
+            $balSymbol = substr($this->selectedSymbol, 0, -3);
+            $quantity = $balances[$balSymbol]['available'];
+            print_r("Q:".$quantity);
                 
             $order = $this->api->marketSell($this->selectedSymbol, $quantity);
             print_r($order);
@@ -236,9 +238,9 @@ class Logik {
         
         // Verkaufe, wenn letzte 5 Minuten negativ UND Target drüber oder unter Danger
         if ( 
-            ( ($aktChange < 0) && ($this->selectedChange > $this->changeTarget) )
+            ( ($aktChange <= 0) && ($this->selectedChange > $this->changeTarget) )
              || 
-            ( ($aktChange < 0) && ($this->selectedChange < $this->changeDanger) )
+            ( ($aktChange <= 0) && ($this->selectedChange < $this->changeDanger) )
            )
         {
             echo "SELL!" . PHP_EOL;
@@ -257,4 +259,3 @@ class Logik {
         });
     }
 }
-
