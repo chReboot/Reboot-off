@@ -65,8 +65,10 @@ class Logik {
         foreach($ticker as $symbol=>$value)
         {
             if(
-                (substr($symbol, -3) == "BTC")
-                && $count < $this->anzahlSymbols
+                (  (substr($symbol, -3) == "BTC")
+                && ($count < $this->anzahlSymbols)
+                && ($value > 0.00000020)
+                )
             )
             {
                 $this->btcSymbols[$symbol]["name"] = $symbol;
