@@ -1,5 +1,5 @@
 <?php
 
-$anzahlSymbols = 3;
+$anzahlSymbols = 30;
 $changeTarget = 3;
 $changeDanger = -2;

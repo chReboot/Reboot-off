@@ -7,6 +7,7 @@ class Logik {
     private $dbcon;
     private $btcSymbols = array();
     private $api;
+    private $apiconnect;
     private $selectedSymbol;
     private $selectedId;
     private $selectedKurs;
@@ -32,6 +33,7 @@ class Logik {
         // API
         $this->api = new Binance\API( "binance.json" );
         $this->api = new Binance\RateLimiter($this->api);
+        $this->apiconnect = $binance;
     }
 
     public function getOrderDB ()
@@ -91,7 +93,7 @@ class Logik {
             #echo $btcSymbol." price change since yesterday: ".$prevDay['priceChangePercent']."%".PHP_EOL;
 
             // 1m 3m 5m 15m 30m 1h 2h 4h 6h 8h 12h 1d 3d 1w 1M
-            $timekapsel = array("4h", "3d");
+            $timekapsel = array("15m", "1h");
             
             foreach($timekapsel as $tDauer)
             {
@@ -117,12 +119,12 @@ class Logik {
     public function selectSymbol()
     {
         echo "selectSymbol".PHP_EOL;        
-        array_multisort(array_column($this->btcSymbols, '3dChange'), SORT_DESC, $this->btcSymbols);        
+        array_multisort(array_column($this->btcSymbols, '1hChange'), SORT_DESC, $this->btcSymbols);        
         foreach($this->btcSymbols as $symbol=>$values)
         {
             if(
-                ($values["3dChange"] > 0)
-                && ($values["4hChange"] > 0)
+                ($values["15mChange"] > 0)
+                && ($values["1hChange"] > 0)
                 && ($values["24hChange"] > 0)
             ) {
                 echo "Beste: ".$symbol.PHP_EOL; 
@@ -137,18 +139,22 @@ class Logik {
     {
         echo "buySymbol".PHP_EOL;
 
-        // Wie viel habe ich?
-        $ticker = $this->api->prices();
-        $balances = $this->api->balances($ticker);
-                
-        // BUY
-        $einsatz = 0.3 * $balances['BTC']['available'];
-        $quantity = $einsatz / $ticker[$this->selectedSymbol];
+        if ($this->apiconnect) 
+        {
+            // Wie viel habe ich?
+            $ticker = $this->api->prices();
+            $balances = $this->api->balances($ticker);
+                    
+            // BUY
+            $einsatz = 0.3 * $balances['BTC']['available'];
+            $quantity = $einsatz / $ticker[$this->selectedSymbol];
 
-        print_r("Menge". $quantity);
+            print_r("Menge". $quantity);
 
-        $order = $this->api->marketBuy($this->selectedSymbol, $quantity);
-        print_r($order);
+            $order = $this->api->marketBuy($this->selectedSymbol, $quantity);
+            print_r($order);
+        }
+        
         
         // DB Log
         try {
@@ -170,14 +176,19 @@ class Logik {
     public function sellSymbol() 
     {
         echo "sellSymbol".PHP_EOL;
-        
-        // Wie viel habe ich?
-        $ticker = $this->api->prices();
-        $balances = $this->api->balances($ticker);
-        
-        // SELL
-        $quantity = $balances[$this->selectedSymbol]['available'];
-        $order = $this->api->marketSell($this->selectedSymbol, $quantity);
+
+        if ($this->apiconnect) 
+        {
+            // Wie viel habe ich?
+            $ticker = $this->api->prices();
+            $balances = $this->api->balances($ticker);
+            
+            // SELL
+            $quantity = $balances[$this->selectedSymbol]['available'];
+                
+            $order = $this->api->marketSell($this->selectedSymbol, $quantity);
+            print_r($order);
+        }        
 
         // DB Log        
         try {
@@ -204,7 +215,7 @@ class Logik {
         
         // Letzte Zeit prüfen
         // 1m 3m 5m 15m 30m 1h 2h 4h 6h 8h 12h 1d 3d 1w 1M
-        $ticks = $this->api->candlesticks($this->selectedSymbol, "5m", 1);
+        $ticks = $this->api->candlesticks($this->selectedSymbol, "15m", 1);
                 
         // Anfangswert = openPrice
         // Endwert = lastPrice
