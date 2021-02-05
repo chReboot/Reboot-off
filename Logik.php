@@ -95,7 +95,7 @@ class Logik {
             #echo $btcSymbol." price change since yesterday: ".$prevDay['priceChangePercent']."%".PHP_EOL;
 
             // 1m 3m 5m 15m 30m 1h 2h 4h 6h 8h 12h 1d 3d 1w 1M
-            $timekapsel = array("15m", "1h");
+            $timekapsel = array("3d", "1h");
             
             foreach($timekapsel as $tDauer)
             {
@@ -117,17 +117,18 @@ class Logik {
         }
         return true;
     }
-
+    
+    
     public function selectSymbol()
     {
         echo "selectSymbol".PHP_EOL;        
-        array_multisort(array_column($this->btcSymbols, '1hChange'), SORT_DESC, $this->btcSymbols);        
+        array_multisort(array_column($this->btcSymbols, '24hChange'), SORT_DESC, $this->btcSymbols);        
         foreach($this->btcSymbols as $symbol=>$values)
         {
             if(
-                ($values["15mChange"] > 0)
-                && ($values["1hChange"] > 0)
-                && ($values["24hChange"] > 0)
+                ($values["3dChange"] > 0 && $values["3dChange"] < 6)
+                && ($values["24hChange"] > 3 && $values["24hChange"] < 10)
+                && ($values["1hChange"] > 1 && $values["1hChange"] < 10)
             ) {
                 echo "Beste: ".$symbol.PHP_EOL; 
                 $this->selectedSymbol = $symbol;
@@ -201,7 +202,7 @@ class Logik {
             $stmt->execute( [                            
                             $this->sellKurs, 
                             date('Y-m-d H:i:s'),
-                            $this->selectedChange,
+                            round($this->selectedChange, 1),
                             $this->selectedId
                             ]);
         } catch(PDOException $error) 
@@ -219,12 +220,12 @@ class Logik {
         
         // Letzte Zeit prüfen
         // 1m 3m 5m 15m 30m 1h 2h 4h 6h 8h 12h 1d 3d 1w 1M
-        $ticks = $this->api->candlesticks($this->selectedSymbol, "15m", 1);
+        #$ticks = $this->api->candlesticks($this->selectedSymbol, "15m", 1);
                 
         // Anfangswert = openPrice
         // Endwert = lastPrice
         // Change = Endwert - Anfangswert / Anfangswert * 100
-        $aktChange = (current($ticks)["close"] - current($ticks)["open"]) / current($ticks)["open"] * 100;
+        #$aktChange = (current($ticks)["close"] - current($ticks)["open"]) / current($ticks)["open"] * 100;
         
         // Anfangswert = openPrice
         // Endwert = lastPrice
@@ -233,17 +234,13 @@ class Logik {
         
         echo "Anfang:".$this->selectedKurs . PHP_EOL;
         echo "Ende:". $price . PHP_EOL;
-        echo "aktChange:".$aktChange . PHP_EOL;
+        #echo "aktChange:".$aktChange . PHP_EOL;
         echo "selectChange".$this->selectedChange . PHP_EOL;
         echo "changeDanger".$this->changeDanger . PHP_EOL;
         echo "changeTarget".$this->changeTarget . PHP_EOL;
         
         // Verkaufe, wenn letzte 5 Minuten negativ UND Target drüber oder unter Danger
-        if ( 
-            ( ($aktChange <= 0) && ($this->selectedChange > $this->changeTarget) )
-             || 
-            ( ($aktChange <= 0) && ($this->selectedChange < $this->changeDanger) )
-           )
+        if ($this->selectedChange > $this->changeTarget)
         {
             echo "SELL!" . PHP_EOL;
             $this->sellKurs = $price;
